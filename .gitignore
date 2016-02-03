@@ -1,0 +1,11 @@
+obj/
+bin/Debug/glew32.dll
+bin/Debug/glew32mx.dll
+bin/Debug/resources/shaders/color/color.frag
+bin/Debug/resources/shaders/color/color.vert
+bin/Debug/td.exe
+glew32.dll
+glew32mx.dll
+td.cbp
+td.depend
+td.layout
