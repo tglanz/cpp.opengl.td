@@ -221,7 +221,7 @@ namespace td
             void drawElementsAsWireframe()
             {
                 glDrawElements(
-                   GL_LINES,
+                   GL_LINE_STRIP,
                    m_indices.size(),
                    GL_UNSIGNED_INT,
                    (void*)0

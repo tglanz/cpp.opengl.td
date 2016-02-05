@@ -46,7 +46,7 @@ namespace td {
             Vertex()
             {
                 m_position = vec3(0.0f, 0.0f, 0.0f);
-                m_color = vec4(0.5f, 0.5f, 0.5f, 1.0);
+                m_color = vec4(.1f, .1f, 1.0f, 1.0f);
                 m_normal = vec3(0, 0, 0);
             }
 

@@ -41,36 +41,38 @@ out vec4 color;
 
 void main(void)
 {
+    vec3 normal = normalize(vs_normal);
+
     // todo: refactor to uniform struct array
     vec3 light_pos = vec3(0.0f, 0.0f, 5.0f);
-    vec3 light_intensities = vec3(.2f, 0.2f, 0.2f);
+    vec3 light_intensities = vec3(1.0f, 1.0f, 1.0f);
     float attenuation_factor = .0f;
 
-    vec3 surface_to_light = light_pos - vs_position;
-    vec3 surface_to_light_direction = normalize(surface_to_light);
-    float cos_aoi_angle = dot(vs_normal, surface_to_light_direction);
+    vec3 surfaceToLight = light_pos - vs_position;
+    vec3 surfaceToLightDirection = normalize(surfaceToLight);
+    float cosAoiAngle = dot(normal, surfaceToLightDirection);
 
-    float distance_to_light = length(surface_to_light);
-    float attenuation = 1.0f / (1.0f + attenuation_factor * pow(distance_to_light, 2.0f));
+    float distanceSurfaceToLight = length(surfaceToLight);
+    float attenuation = 1.0f / (1.0f + attenuation_factor * pow(distanceSurfaceToLight, 2.0f));
 
     // diffuse
-    float diffuse_coefficient = max(0.0f, cos_aoi_angle);
-    vec3 diffuse_intensities = diffuse_coefficient * vs_color.rgb * light_intensities;
+    float diffuseCoefficient = max(0.0f, cosAoiAngle);
+    vec3 diffuseIntensities = diffuseCoefficient * light_intensities;
 
     // specular
-    float specular_coefficient = .0f;
-    if (diffuse_coefficient != .0f)
+    float specularCoefficient = .0f;
+    if (diffuseCoefficient != .0f)
     {
-        vec3 incident_direction = -surface_to_light_direction;
-        vec3 reflection_direction = reflect(incident_direction, vs_normal);
-        vec3 surface_to_eye = normalize(eye_position - vs_position);
-        float cos_angle = max(.0f, dot(surface_to_eye, reflection_direction));
-        specular_coefficient = pow(cos_angle, material_specular_shininess);
+        vec3 incidentDirection = -surfaceToLightDirection;
+        vec3 reflectionDirection = reflect(incidentDirection, normal);
+        vec3 surfaceToEye = normalize(eye_position - vs_position);
+        float cosAngle = max(.0f, dot(surfaceToEye, reflectionDirection));
+        specularCoefficient = pow(cosAngle, material_specular_shininess);
     }
-    vec3 specular_intensities = specular_coefficient * material_specular_color * light_intensities;
+    vec3 specularIntensities = specularCoefficient * material_specular_color * light_intensities;
 
-    vec3 linear_color = ambient + attenuation * (diffuse_intensities + specular_intensities);
+    vec3 linearColor = ambient + attenuation * (diffuseIntensities + specularIntensities) * vs_color;
 
     vec3 gamma = vec3(1.0f / 2.2f);
-    color = vec4(pow(linear_color, gamma), 1.0f);
+    color = vec4(pow(linearColor, gamma), 1.0f);
 }

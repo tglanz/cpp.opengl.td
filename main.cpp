@@ -61,8 +61,8 @@ std::vector<Mesh*> allMeshes;
 
 Material materialA(&defaultProgram.layout()), materialB(&defaultProgram.layout());
 
-Geometry *planeGeo, *icosahedronGeo, *temporaryGeo;
-Mesh *meshA, *meshB, *meshC, *meshD;
+Geometry *planeGeo, *icosahedronGeo, *temporaryGeo, *cylinderGeo;
+Mesh *meshA, *meshB, *meshC, *meshD, *meshE, *meshF;
 
 glm::vec4 clearColor(0x00 / 255.0f, 0xC0 / 255.0f, 0x00 / 255.0f, 1.0f);
 
@@ -123,26 +123,48 @@ bool init()
     icosahedronGeo = geometries::newIcosahedron();
     allGeometries.push_back(icosahedronGeo);
 
+    cylinderGeo = geometries::newCylinder(1.0f, .5f, 2.0f, 64.0f);
+    allGeometries.push_back(cylinderGeo);
+
     for (unsigned int idx = 0; idx < allGeometries.size(); ++idx)
     {
         setupNewGeometry(allGeometries[idx]);
     }
 
-    materialA.specularShininess() = 1.5f;
-    materialA.specularColor() = glm::vec3(1.0f, 0.7f, 0.7f);
+    materialA.specularShininess() = 30.0f;
+    materialA.specularColor() = glm::vec3(1.0f, 1.0f, 1.0f);
 
     materialB.specularShininess() = 1.5f;
 
+    meshD = new Mesh(cylinderGeo, &materialA);
+    meshD->transformation().translate(3.0, 0.0, 0.0);
+    allMeshes.push_back(meshD);
+
+    meshE = new Mesh(cylinderGeo, &materialA);
+    meshE->transformation().translate(0.0, 0.0, 0.0);
+    allMeshes.push_back(meshE);
+
+    meshF = new Mesh(cylinderGeo, &materialA);
+    meshF->transformation().translate(-3.0, 0.0, 0.0);
+    allMeshes.push_back(meshF);
+
+
     meshA = new Mesh(icosahedronGeo, &materialA);
+    meshA->transformation().translate(2, 3, 0);
     allMeshes.push_back(meshA);
 
     meshB = new Mesh(icosahedronGeo, &materialA);
-    meshB->transformation().translate(2.0f, 0, 0);
+    meshB->transformation().translate(0.0f, 3, 0);
     allMeshes.push_back(meshB);
 
     meshC = new Mesh(icosahedronGeo, &materialA);
-    meshC->transformation().translate(-2.0f, 0, 0);
+    meshC->transformation().translate(-2.0f, 3, 0);
     allMeshes.push_back(meshC);
+
+    meshA->transformation().rotateDegreesAroundZ(45);
+    meshB->transformation().rotateDegreesAroundX(45);
+    meshC->transformation().rotateDegreesAroundY(45);
+
 
     return true;
 }
@@ -172,11 +194,17 @@ void update()
     float now = glfwGetTime();
     float delta = now - lastTime;
 
-    float rotSpeed = 30;
+
+    static float rotSpeed = 100;
+
 
     meshA->transformation().rotateDegreesAroundZ(delta * rotSpeed);
     meshB->transformation().rotateDegreesAroundX(delta * rotSpeed);
     meshC->transformation().rotateDegreesAroundY(delta * rotSpeed);
+
+    meshD->transformation().rotateDegreesAroundZ(delta * rotSpeed);
+    meshE->transformation().rotateDegreesAroundX(delta * rotSpeed);
+    meshF->transformation().rotateDegreesAroundY(delta * rotSpeed);
 
     camera.timeFactor() = delta;
     camera.update();
@@ -199,7 +227,7 @@ void render()
 
     layout.setViewPerspectiveProjectionsUniforms(view, perspective);
 
-    layout.setAmbientUniform(glm::vec3(.05, 0.01, .01));
+    layout.setAmbientUniform(glm::vec3(.05f, .05f, .05f));
     layout.setEyePositionUniform(camera.getPosition());
 
     for (unsigned int idx = 0; idx < allMeshes.size(); ++idx)

@@ -17,7 +17,9 @@ namespace td
 
             td::gpu::Geometry * newIcosahedron();
 
-            td::gpu::Geometry * newTemporary(const float& a, const float& b);
+            td::gpu::Geometry * newTemporary(const float & a, const float& b);
+
+            td::gpu::Geometry * newCylinder(const float & bottomRadius, const float & topRadius, const float & height, const unsigned int & latitudeCuts);
         }
     }
 }
