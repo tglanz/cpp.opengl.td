@@ -6,10 +6,16 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_access.hpp>
 
 #include "Vertex.h"
 
+#include "UBO.h"
+
 using namespace glm;
+
+using namespace td;
+using namespace gpu;
 
 namespace td
 {
@@ -19,43 +25,59 @@ namespace td
         {
         private:
 
+            UBO m_viewBlockUBO, m_materialDiffuseBlockUBO, m_materialSpecularBlockUBO;
+
         public:
+
+            struct ViewBlock
+            {
+                mat4 viewProjection;
+                mat4 perspectiveProjection;
+                vec3 eyePosition;
+            } m_viewBlock;
+
+            struct MaterialSpecularBlock
+            {
+                vec3 color;
+                float shininess;
+            } m_materialSpecularBlock;
+
+            struct MaterialDiffuesBlock
+            {
+                vec3 color;
+                float shininess;
+            } m_materialDiffuseBlock;
+
             struct
             {
                 struct
                 {
                     GLint model;
-                    GLint view;
-                    GLint perspective;
                 } projections;
 
-                GLint eyePosition, ambient;
-
-                struct
-                {
-                    GLint specularColor;
-                    GLint specularShininess;
-                } material;
+                GLint ambient;
 
             } uniforms;
 
             struct
             {
                 GLint position;
-                GLint color;
                 GLint normal;
             } attributes;
 
-            ProgramLayout()
-            {
+            ProgramLayout() :
+                m_viewBlockUBO(1, "ViewBlock"),
+                m_materialDiffuseBlockUBO(2, "MaterialDiffuseBlock"),
+                m_materialSpecularBlockUBO(3, "MaterialSpecularBlock")
+            { }
 
-            }
+            inline ViewBlock & viewBlock(){ return m_viewBlock; }
+            inline MaterialSpecularBlock & materialSpecularBlock() { return m_materialSpecularBlock; }
+            inline MaterialDiffuesBlock & materialDiffuseBlock() { return m_materialDiffuseBlock; }
 
-            inline void setViewPerspectiveProjectionsUniforms(const mat4 & view, const mat4 & perspective)
-            {
-                glUniformMatrix4fv(uniforms.projections.view, 1, GL_FALSE, value_ptr(view));
-                glUniformMatrix4fv(uniforms.projections.perspective, 1, GL_FALSE, value_ptr(perspective));
-            }
+            void remapViewBlockUBO() { m_viewBlockUBO.remap(); }
+            void remapMaterialSpecularBlockUBO() { m_materialSpecularBlockUBO.remap(); }
+            void remapMaterialDiffuseBlockUBO() { m_materialDiffuseBlockUBO.remap(); }
 
             inline void setModelProjectionUniform(const mat4 & model)
             {
@@ -67,32 +89,15 @@ namespace td
                 glUniform3fv(uniforms.ambient, 1, value_ptr(ambient));
             }
 
-            inline void setEyePositionUniform(const vec3 & eyePosition)
-            {
-                glUniform3fv(uniforms.eyePosition, 1, value_ptr(eyePosition));
-            }
-
-            inline void setSpecularShininessUniform(const float& shininess)
-            {
-                glUniform1f(uniforms.material.specularShininess, shininess);
-            }
-
-            inline void setSpecularColorUniform(const glm::vec3 & specularColor)
-            {
-                glUniform3fv(uniforms.material.specularColor, 1, value_ptr(specularColor));
-            }
-
             inline void enableAllAttributes()
             {
                 glEnableVertexAttribArray(attributes.position);
-                glEnableVertexAttribArray(attributes.color);
                 glEnableVertexAttribArray(attributes.normal);
             }
 
             inline void disableAllAttributes()
             {
                 glDisableVertexAttribArray(attributes.position);
-                glDisableVertexAttribArray(attributes.color);
                 glDisableVertexAttribArray(attributes.normal);
             }
 
@@ -105,15 +110,6 @@ namespace td
                     Vertex::Position.Normalize,
                     sizeof(Vertex),
                     (void *)Vertex::Position.Offset
-                );
-
-                glVertexAttribPointer(
-                    attributes.color,
-                    Vertex::Color.Components,
-                    Vertex::Color.Type,
-                    Vertex::Color.Normalize,
-                    sizeof(Vertex),
-                    (void *)Vertex::Color.Offset
                 );
 
                 glVertexAttribPointer(
@@ -130,35 +126,35 @@ namespace td
             {
                 printf("Layout locations:\n");
                 printf("uniforms.projections.model %d\n", uniforms.projections.model);
-                printf("uniforms.projections.view %d\n", uniforms.projections.view);
-                printf("uniforms.projections.perspective %d\n", uniforms.projections.perspective);
 
-                printf("uniforms.material.specularShininess %d\n", uniforms.material.specularShininess);
-                printf("uniforms.material.specularColor %d\n", uniforms.material.specularColor);
-
-                printf("uniforms.eyePosition %d\n", uniforms.eyePosition);
                 printf("uniforms.ambient %d\n", uniforms.ambient);
 
                 printf("attributes.position %d\n", attributes.position);
-                printf("attributes.color %d\n", attributes.color);
                 printf("attributes.normal %d\n", attributes.normal);
             }
 
             void acquireLayoutLocations(GLuint program)
             {
                 uniforms.projections.model = glGetUniformLocation(program, "model_projection");
-                uniforms.projections.view = glGetUniformLocation(program, "view_projection");
-                uniforms.projections.perspective = glGetUniformLocation(program, "perspective_projection");
 
-                uniforms.material.specularShininess = glGetUniformLocation(program, "material_specular_shininess");
-                uniforms.material.specularColor = glGetUniformLocation(program, "material_specular_color");
-
-                uniforms.eyePosition = glGetUniformLocation(program, "eye_position");
                 uniforms.ambient = glGetUniformLocation(program, "ambient");
 
                 attributes.position = glGetAttribLocation(program, "in_position");
-                attributes.color = glGetAttribLocation(program, "in_color");
                 attributes.normal = glGetAttribLocation(program, "in_normal");
+
+                m_viewBlockUBO.initialize(program, sizeof(m_viewBlock), &m_viewBlock);
+                m_materialDiffuseBlockUBO.initialize(program, sizeof(m_materialDiffuseBlock), &m_materialDiffuseBlock);
+                m_materialSpecularBlockUBO.initialize(program, sizeof(m_materialSpecularBlock), &m_materialSpecularBlock);
+            }
+
+            void checkError(const char * context)
+            {
+                int error = glGetError();
+
+                if (error != 0)
+                {
+                    printf("Error (%s): %d\n", context, error);
+                }
             }
         };
     }

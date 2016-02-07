@@ -35,29 +35,21 @@ namespace td {
         {
         private:
             vec3 m_position;
-            vec4 m_color;
             vec3 m_normal;
 
         public:
             const static gpu::VertexAttribMeta Position;
-            const static gpu::VertexAttribMeta Color;
             const static gpu::VertexAttribMeta Normal;
 
             Vertex()
             {
                 m_position = vec3(0.0f, 0.0f, 0.0f);
-                m_color = vec4(.1f, .1f, 1.0f, 1.0f);
                 m_normal = vec3(0, 0, 0);
             }
 
             void printPosition()
             {
                 printf("xyz:\t%f\t%f\t%f\n", m_position.x, m_position.y, m_position.z);
-            }
-
-            void printColor()
-            {
-                printf("rgba:\t%f\t%f\t%f\t%f\n", m_color.r, m_color.g, m_color.b, m_color.a);
             }
 
             void printNormal()
@@ -118,45 +110,6 @@ namespace td {
             Vertex & setNormal(const float& x, const float& y, const float& z)
             {
                 m_normal = normalize(glm::vec3(x, y, z));
-                return *this;
-            }
-
-            /**
-                setColor
-                all functions are explicitly implemented
-            **/
-
-            Vertex& setColor(const vec4& color)
-            {
-                m_color.r = color.r;
-                m_color.g = color.g;
-                m_color.b = color.b;
-                m_color.a = color.a;
-                return *this;
-            }
-
-            Vertex& setColor(const vec3& color)
-            {
-                m_color.r = color.r;
-                m_color.g = color.g;
-                m_color.b = color.b;
-                return *this;
-            }
-
-            Vertex& setColor(const float& r, const float& g, const float& b)
-            {
-                m_color.r = r;
-                m_color.g = g;
-                m_color.b = b;
-                return *this;
-            }
-
-            Vertex& setColor(const float& r, const float& g, const float& b, const float& a)
-            {
-                m_color.r = r;
-                m_color.g = g;
-                m_color.b = b;
-                m_color.a = a;
                 return *this;
             }
         };

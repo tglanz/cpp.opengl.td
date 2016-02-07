@@ -17,6 +17,7 @@ namespace td
             float m_specularShininess;
             glm::vec3 m_specularColor;
 
+            glm::vec3 m_diffuseColor;
 
         public:
 
@@ -27,15 +28,20 @@ namespace td
                 m_specularShininess = .1f;
             }
 
-            inline ProgramLayout * const programLayout() { return m_programLayout; }
+            ProgramLayout * const programLayout() { return m_programLayout; }
 
             inline glm::vec3 & specularColor() { return m_specularColor; }
             inline float & specularShininess() { return m_specularShininess; }
+            inline glm::vec3 & diffuseColor() { return m_diffuseColor; }
 
             void assignUniforms()
             {
-                m_programLayout->setSpecularShininessUniform(m_specularShininess);
-                m_programLayout->setSpecularColorUniform(m_specularColor);
+                m_programLayout->materialSpecularBlock().color = m_specularColor;
+                m_programLayout->materialSpecularBlock().shininess = m_specularShininess;
+                m_programLayout->materialDiffuseBlock().color = m_diffuseColor;
+
+                m_programLayout->remapMaterialSpecularBlockUBO();
+                m_programLayout->remapMaterialDiffuseBlockUBO();
             }
         };
     }

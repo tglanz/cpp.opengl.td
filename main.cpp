@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <stdio.h>
 
@@ -20,8 +19,6 @@
 #include "td/gpu/Vertex.h"
 #include "td/gpu/Geometry.h"
 #include "td/gpu/geometries.h"
-
-#include "td/gpu/Transformations.h"
 
 #include "td/cameras/Camera.h"
 #include "td/cameras/FirstPersonCamera.h"
@@ -59,7 +56,8 @@ td::cameras::FirstPersonCamera camera = td::cameras::FirstPersonCamera(&mouse, &
 std::vector<Geometry*> allGeometries;
 std::vector<Mesh*> allMeshes;
 
-Material materialA(&defaultProgram.layout()), materialB(&defaultProgram.layout());
+Material materialA(defaultProgram.layout());
+Material materialB(defaultProgram.layout());
 
 Geometry *planeGeo, *icosahedronGeo, *temporaryGeo, *cylinderGeo;
 Mesh *meshA, *meshB, *meshC, *meshD, *meshE, *meshF;
@@ -123,7 +121,7 @@ bool init()
     icosahedronGeo = geometries::newIcosahedron();
     allGeometries.push_back(icosahedronGeo);
 
-    cylinderGeo = geometries::newCylinder(1.0f, .5f, 2.0f, 64.0f);
+    cylinderGeo = geometries::newCylinder(1.0f, .5f, 2.0f, 6.0f);
     allGeometries.push_back(cylinderGeo);
 
     for (unsigned int idx = 0; idx < allGeometries.size(); ++idx)
@@ -131,8 +129,9 @@ bool init()
         setupNewGeometry(allGeometries[idx]);
     }
 
-    materialA.specularShininess() = 30.0f;
-    materialA.specularColor() = glm::vec3(1.0f, 1.0f, 1.0f);
+    materialA.specularShininess() = 10.0f;
+    materialA.specularColor() = glm::vec3(1, 0, 0);
+    materialA.diffuseColor() = glm::vec3(0.2, 0.2, 1);
 
     materialB.specularShininess() = 1.5f;
 
@@ -194,7 +193,6 @@ void update()
     float now = glfwGetTime();
     float delta = now - lastTime;
 
-
     static float rotSpeed = 100;
 
 
@@ -218,17 +216,19 @@ void render()
 
     defaultProgram.use();
 
-    ProgramLayout layout = defaultProgram.layout();
-
     glm::mat4 perspective = glm::perspective(FOV, RESOLUTION_WIDTH / RESOLUTION_HEIGHT, CLIP_NEAR, CLIP_FAR);
     glm::mat4 view = camera.getViewMatrix();
 
     glUniformMatrix4fv(10, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
-    layout.setViewPerspectiveProjectionsUniforms(view, perspective);
+    ProgramLayout * layout = defaultProgram.layout();
 
-    layout.setAmbientUniform(glm::vec3(.05f, .05f, .05f));
-    layout.setEyePositionUniform(camera.getPosition());
+    layout->viewBlock().viewProjection = view;
+    layout->viewBlock().perspectiveProjection = perspective;
+    layout->viewBlock().eyePosition = camera.getPosition();
+    layout->remapViewBlockUBO();
+
+    layout->setAmbientUniform(glm::vec3(.07f, .07f, .03f));
 
     for (unsigned int idx = 0; idx < allMeshes.size(); ++idx)
     {
@@ -240,7 +240,7 @@ void setupNewGeometry(Geometry * geo)
 {
     geo->setupGpuBindings();
     geo->bind();
-    defaultProgram.layout().declareVertexAtribPointers();
+    defaultProgram.layout()->declareVertexAtribPointers();
     geo->unbind();
 }
 

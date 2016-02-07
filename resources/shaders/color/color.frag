@@ -27,28 +27,48 @@ void main(void)
 */
 #version 430 core
 
-uniform vec3 eye_position;
+layout(std140) uniform ViewBlock
+{
+    mat4 viewProjection;
+    mat4 perspectiveProjection;
+    vec3 eyePosition;
+} viewBlock;
+
+layout(std140) uniform MaterialDiffuseBlock
+{
+    vec3 color;
+} materialDiffuseBlock;
+
+layout(std140) uniform MaterialSpecularBlock
+{
+    vec3 color;
+    float shininess;
+} materialSpecularBlock;
+
+in VertexOutput
+{
+    vec3 position;
+    vec3 normal;
+} vertexOutput;
+
 uniform vec3 ambient;
-
-uniform vec3 material_specular_color;
-uniform float material_specular_shininess;
-
-in vec4 vs_color;
-in vec3 vs_position;
-in vec3 vs_normal;
 
 out vec4 color;
 
 void main(void)
 {
-    vec3 normal = normalize(vs_normal);
+    vec3 normal = normalize(vertexOutput.normal);
 
     // todo: refactor to uniform struct array
-    vec3 light_pos = vec3(0.0f, 0.0f, 5.0f);
-    vec3 light_intensities = vec3(1.0f, 1.0f, 1.0f);
+    vec3 material_diffuse_color = materialDiffuseBlock.color;
+    vec3 material_specular_color = materialSpecularBlock.color;
+    float material_specular_shininess = materialSpecularBlock.shininess;
+
+    vec3 light_pos = vec3(0.0f, 0.0f, 15.0f);
+    vec3 light_intensities = vec3(1.0f, .93f, .5f);
     float attenuation_factor = .0f;
 
-    vec3 surfaceToLight = light_pos - vs_position;
+    vec3 surfaceToLight = light_pos - vertexOutput.position;
     vec3 surfaceToLightDirection = normalize(surfaceToLight);
     float cosAoiAngle = dot(normal, surfaceToLightDirection);
 
@@ -57,7 +77,7 @@ void main(void)
 
     // diffuse
     float diffuseCoefficient = max(0.0f, cosAoiAngle);
-    vec3 diffuseIntensities = diffuseCoefficient * light_intensities;
+    vec3 diffuseIntensities = diffuseCoefficient * light_intensities * material_diffuse_color;
 
     // specular
     float specularCoefficient = .0f;
@@ -65,13 +85,13 @@ void main(void)
     {
         vec3 incidentDirection = -surfaceToLightDirection;
         vec3 reflectionDirection = reflect(incidentDirection, normal);
-        vec3 surfaceToEye = normalize(eye_position - vs_position);
+        vec3 surfaceToEye = normalize(viewBlock.eyePosition - vertexOutput.position);
         float cosAngle = max(.0f, dot(surfaceToEye, reflectionDirection));
         specularCoefficient = pow(cosAngle, material_specular_shininess);
     }
     vec3 specularIntensities = specularCoefficient * material_specular_color * light_intensities;
 
-    vec3 linearColor = ambient + attenuation * (diffuseIntensities + specularIntensities) * vs_color;
+    vec3 linearColor = ambient + attenuation * (diffuseIntensities + specularIntensities);
 
     vec3 gamma = vec3(1.0f / 2.2f);
     color = vec4(pow(linearColor, gamma), 1.0f);

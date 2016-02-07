@@ -65,7 +65,7 @@ namespace td
 
             bool compile();
 
-            ProgramLayout & layout() { return m_layout; }
+            ProgramLayout * const layout() { return &m_layout; }
 
             void acquireLayoutLocations()
             {

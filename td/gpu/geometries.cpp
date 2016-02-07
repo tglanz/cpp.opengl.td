@@ -16,9 +16,9 @@ td::gpu::Geometry * td::gpu::geometries::newTemporary(const float& a, const floa
 {
     Vertex vertices[] =
     {
-        Vertex().setPosition(-4.0f + a, -4.0f + b, 0.0).setColor(0.0, 1.0, 0.0),
-        Vertex().setPosition(4.0f + a, -4.0f + b, 0.0).setColor(1.0, 0.0, 0.0),
-        Vertex().setPosition(0.0f + a, 4.0f + b, 0.0).setColor(0.0, 0.0, 1.0)
+        Vertex().setPosition(-4.0f + a, -4.0f + b, 0.0),
+        Vertex().setPosition(4.0f + a, -4.0f + b, 0.0),
+        Vertex().setPosition(0.0f + a, 4.0f + b, 0.0)
     };
 
     Geometry * geometry = new Geometry(vertices, 3);
