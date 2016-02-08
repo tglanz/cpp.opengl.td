@@ -59,9 +59,10 @@ std::vector<Mesh*> allMeshes;
 Material materialA(defaultProgram.layout());
 Material materialB(defaultProgram.layout());
 
-Geometry *planeGeo, *icosahedronGeo, *temporaryGeo, *cylinderGeo;
+Geometry *planeGeo, *icosahedronGeo, *temporaryGeo, *cylinderGeo, *boxGeo, *sphereGeo;
 Mesh *meshA, *meshB, *meshC, *meshD, *meshE, *meshF;
 Mesh *pointMesh, *pointMesh2, *pointMesh3;
+Mesh *boxMeshA, *boxMeshB, *boxMeshC;
 
 glm::vec4 clearColor(0x00 / 255.0f, 0x90 / 255.0f, 0x00 / 255.0f, 1.0f);
 
@@ -108,7 +109,7 @@ bool init()
 
     defaultProgram.acquireLayoutLocations();
 
-    camera.setPosition(glm::vec3(0.0f, 0.0f, 15.0f));
+    camera.setPosition(glm::vec3(0.0f, 0.0f, 20.0f));
     camera.lookAtTarget(glm::vec3(0.0f, 0, 0));
 
     defaultProgram.use();
@@ -117,7 +118,7 @@ bool init()
     defaultProgram.layout()->directionalLightBlock().lights[0].intensities = glm::vec4(0, 0, 1, 0);
     defaultProgram.layout()->directionalLightBlock().lights[1].direction = glm::vec4(-1, 0, 0, 0);
     defaultProgram.layout()->directionalLightBlock().lights[1].intensities = glm::vec4(1, 0, 0, 0);
-    defaultProgram.layout()->directionalLightBlock().sequentialNumberOfLights = 2;
+    defaultProgram.layout()->directionalLightBlock().sequentialNumberOfLights = 0;
     defaultProgram.layout()->remapDirectionalLightBlock();
 
     defaultProgram.layout()->pointLightBlock().lights[0].position = glm::vec4(0, 0, 15, 0);
@@ -126,6 +127,15 @@ bool init()
     defaultProgram.layout()->pointLightBlock().lights[1].intensities = glm::vec4(1.0, 0.0, 0.0, 0.0);;
     defaultProgram.layout()->pointLightBlock().lights[2].position = glm::vec4(0, 0, 15, 0);
     defaultProgram.layout()->pointLightBlock().lights[2].intensities = glm::vec4(0.0, 1.0, 0.0, 0.0);;
+    defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights = 3;
+
+    for (int idx = 0; idx < defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights; ++idx)
+    {
+        defaultProgram.layout()->pointLightBlock().lights[idx].attenuation.constant = 1;
+        defaultProgram.layout()->pointLightBlock().lights[idx].attenuation.linear = 0;
+        defaultProgram.layout()->pointLightBlock().lights[idx].attenuation.quadratic = 0;
+    }
+
     defaultProgram.layout()->remapPointLightBlock();
 
     planeGeo = geometries::newPlane(20, 20, 2, 2);
@@ -134,11 +144,19 @@ bool init()
     temporaryGeo = geometries::newTemporary(0, 0);
     allGeometries.push_back(temporaryGeo);
 
-    icosahedronGeo = geometries::newIcosahedron();
+    icosahedronGeo = geometries::newIcosahedron(1);
     allGeometries.push_back(icosahedronGeo);
 
     cylinderGeo = geometries::newCylinder(1.0f, .5f, 2.0f, 6.0f);
     allGeometries.push_back(cylinderGeo);
+
+    boxGeo = geometries::newBox(1.0f, 1.0f, 2.0f);
+    allGeometries.push_back(boxGeo);
+
+    sphereGeo = geometries::newGeodesicSphere(1, 4);
+    allGeometries.push_back(sphereGeo);
+    //sphereGeo->printPositions();
+
 
     for (unsigned int idx = 0; idx < allGeometries.size(); ++idx)
     {
@@ -151,30 +169,41 @@ bool init()
 
     materialB.diffuseColor() = glm::vec3(0, 0, 0);
 
-    meshD = new Mesh(cylinderGeo, &materialA);
-    meshD->transformation().translate(3.0, 0.0, 0.0);
-    allMeshes.push_back(meshD);
+    boxMeshA = new Mesh(boxGeo, &materialA);
+    boxMeshA->transformation().translate(-2, .5, 0);
+    allMeshes.push_back(boxMeshA);
 
-    meshE = new Mesh(cylinderGeo, &materialA);
-    meshE->transformation().translate(0.0, 0.0, 0.0);
-    allMeshes.push_back(meshE);
+    boxMeshB = new Mesh(boxGeo, &materialA);
+    boxMeshB->transformation().translate(0, .5, 0);
+    allMeshes.push_back(boxMeshB);
 
-    meshF = new Mesh(cylinderGeo, &materialA);
-    meshF->transformation().translate(-3.0, 0.0, 0.0);
-    allMeshes.push_back(meshF);
+    boxMeshC = new Mesh(boxGeo, &materialA);
+    boxMeshC->transformation().translate(2, .5, 0);
+    allMeshes.push_back(boxMeshC);
 
-
-    meshA = new Mesh(icosahedronGeo, &materialA);
+    meshA = new Mesh(sphereGeo, &materialA);
     meshA->transformation().translate(2, 3, 0);
     allMeshes.push_back(meshA);
 
-    meshB = new Mesh(icosahedronGeo, &materialA);
+    meshB = new Mesh(sphereGeo, &materialA);
     meshB->transformation().translate(0.0f, 3, 0);
     allMeshes.push_back(meshB);
 
-    meshC = new Mesh(icosahedronGeo, &materialA);
+    meshC = new Mesh(sphereGeo, &materialA);
     meshC->transformation().translate(-2.0f, 3, 0);
     allMeshes.push_back(meshC);
+
+    meshD = new Mesh(cylinderGeo, &materialA);
+    meshD->transformation().translate(3.0, -2.0, 0.0);
+    allMeshes.push_back(meshD);
+
+    meshE = new Mesh(cylinderGeo, &materialA);
+    meshE->transformation().translate(0.0, -2.0, 0.0);
+    allMeshes.push_back(meshE);
+
+    meshF = new Mesh(cylinderGeo, &materialA);
+    meshF->transformation().translate(-3.0, -2.0, 0.0);
+    allMeshes.push_back(meshF);
 
     pointMesh = new Mesh(icosahedronGeo, &materialB);
     pointMesh->transformation().scale(.2);
@@ -221,13 +250,15 @@ void update()
     float delta = now - lastTime;
 
     static float rotSpeed = 100;
-    static float lightPosSpeed = 5;
-    static float lightPosRadius = 4;
+    static float lightPosSpeed = 1;
+    static float lightPosRadius = 5;
 
-    glm::vec4 pointPosition = glm::vec4(cos(now * lightPosSpeed) * lightPosRadius, 0.5, sin(now * lightPosSpeed) * lightPosRadius, 0);
-    glm::vec4 pointPosition2 = glm::vec4(cos( - now * lightPosSpeed) * lightPosRadius, -0.5, sin( - now * lightPosSpeed) * lightPosRadius, 0);
+    glm::vec4 pointPosition = glm::vec4(cos(now * lightPosSpeed) * lightPosRadius, 0, sin(now * lightPosSpeed) * lightPosRadius, 0);
+    glm::vec4 pointPosition2 = glm::vec4(cos( - now * 2 * lightPosSpeed) * lightPosRadius, 0, sin( - now * 2 * lightPosSpeed) * lightPosRadius, 0);
     glm::vec4 pointPosition3 = glm::vec4(0, cos( - now * lightPosSpeed) * lightPosRadius, sin( - now * lightPosSpeed) * lightPosRadius, 0);
+
     defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights = 3;
+
     defaultProgram.layout()->pointLightBlock().lights[0].position = pointPosition;
     defaultProgram.layout()->pointLightBlock().lights[1].position = pointPosition2;
     defaultProgram.layout()->pointLightBlock().lights[2].position = pointPosition3;
@@ -244,6 +275,10 @@ void update()
     meshD->transformation().rotateDegreesAroundZ(delta * rotSpeed);
     meshE->transformation().rotateDegreesAroundX(delta * rotSpeed);
     meshF->transformation().rotateDegreesAroundY(delta * rotSpeed);
+
+    boxMeshA->transformation().rotateDegreesAroundZ(delta * rotSpeed);
+    boxMeshB->transformation().rotateDegreesAroundX(delta * rotSpeed);
+    boxMeshC->transformation().rotateDegreesAroundY(delta * rotSpeed);
 
     camera.timeFactor() = delta;
     camera.update();
