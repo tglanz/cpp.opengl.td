@@ -61,8 +61,9 @@ Material materialB(defaultProgram.layout());
 
 Geometry *planeGeo, *icosahedronGeo, *temporaryGeo, *cylinderGeo;
 Mesh *meshA, *meshB, *meshC, *meshD, *meshE, *meshF;
+Mesh *pointMesh, *pointMesh2, *pointMesh3;
 
-glm::vec4 clearColor(0x00 / 255.0f, 0xC0 / 255.0f, 0x00 / 255.0f, 1.0f);
+glm::vec4 clearColor(0x00 / 255.0f, 0x90 / 255.0f, 0x00 / 255.0f, 1.0f);
 
 int main(void)
 {
@@ -112,6 +113,21 @@ bool init()
 
     defaultProgram.use();
 
+    defaultProgram.layout()->directionalLightBlock().lights[0].direction = glm::vec4(0, 0, -1, 0);
+    defaultProgram.layout()->directionalLightBlock().lights[0].intensities = glm::vec4(0, 0, 1, 0);
+    defaultProgram.layout()->directionalLightBlock().lights[1].direction = glm::vec4(-1, 0, 0, 0);
+    defaultProgram.layout()->directionalLightBlock().lights[1].intensities = glm::vec4(1, 0, 0, 0);
+    defaultProgram.layout()->directionalLightBlock().sequentialNumberOfLights = 2;
+    defaultProgram.layout()->remapDirectionalLightBlock();
+
+    defaultProgram.layout()->pointLightBlock().lights[0].position = glm::vec4(0, 0, 15, 0);
+    defaultProgram.layout()->pointLightBlock().lights[0].intensities = glm::vec4(0.0, 0.0, 1.0, 0.0);
+    defaultProgram.layout()->pointLightBlock().lights[1].position = glm::vec4(0, 0, 15, 0);
+    defaultProgram.layout()->pointLightBlock().lights[1].intensities = glm::vec4(1.0, 0.0, 0.0, 0.0);;
+    defaultProgram.layout()->pointLightBlock().lights[2].position = glm::vec4(0, 0, 15, 0);
+    defaultProgram.layout()->pointLightBlock().lights[2].intensities = glm::vec4(0.0, 1.0, 0.0, 0.0);;
+    defaultProgram.layout()->remapPointLightBlock();
+
     planeGeo = geometries::newPlane(20, 20, 2, 2);
     allGeometries.push_back(planeGeo);
 
@@ -129,11 +145,11 @@ bool init()
         setupNewGeometry(allGeometries[idx]);
     }
 
-    materialA.specularShininess() = 10.0f;
-    materialA.specularColor() = glm::vec3(1, 0, 0);
-    materialA.diffuseColor() = glm::vec3(0.2, 0.2, 1);
+    materialA.specularShininess() = 300.0f;
+    materialA.specularColor() = glm::vec3(.7f, .7f, .7f);
+    materialA.diffuseColor() = glm::vec3(.2f, .2f, .2f);
 
-    materialB.specularShininess() = 1.5f;
+    materialB.diffuseColor() = glm::vec3(0, 0, 0);
 
     meshD = new Mesh(cylinderGeo, &materialA);
     meshD->transformation().translate(3.0, 0.0, 0.0);
@@ -160,10 +176,21 @@ bool init()
     meshC->transformation().translate(-2.0f, 3, 0);
     allMeshes.push_back(meshC);
 
+    pointMesh = new Mesh(icosahedronGeo, &materialB);
+    pointMesh->transformation().scale(.2);
+    allMeshes.push_back(pointMesh);
+
+    pointMesh2 = new Mesh(icosahedronGeo, &materialB);
+    pointMesh2->transformation().scale(.2);
+    allMeshes.push_back(pointMesh2);
+
+    pointMesh3 = new Mesh(icosahedronGeo, &materialB);
+    pointMesh3->transformation().scale(.2);
+    allMeshes.push_back(pointMesh3);
+
     meshA->transformation().rotateDegreesAroundZ(45);
     meshB->transformation().rotateDegreesAroundX(45);
     meshC->transformation().rotateDegreesAroundY(45);
-
 
     return true;
 }
@@ -194,7 +221,21 @@ void update()
     float delta = now - lastTime;
 
     static float rotSpeed = 100;
+    static float lightPosSpeed = 5;
+    static float lightPosRadius = 4;
 
+    glm::vec4 pointPosition = glm::vec4(cos(now * lightPosSpeed) * lightPosRadius, 0.5, sin(now * lightPosSpeed) * lightPosRadius, 0);
+    glm::vec4 pointPosition2 = glm::vec4(cos( - now * lightPosSpeed) * lightPosRadius, -0.5, sin( - now * lightPosSpeed) * lightPosRadius, 0);
+    glm::vec4 pointPosition3 = glm::vec4(0, cos( - now * lightPosSpeed) * lightPosRadius, sin( - now * lightPosSpeed) * lightPosRadius, 0);
+    defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights = 3;
+    defaultProgram.layout()->pointLightBlock().lights[0].position = pointPosition;
+    defaultProgram.layout()->pointLightBlock().lights[1].position = pointPosition2;
+    defaultProgram.layout()->pointLightBlock().lights[2].position = pointPosition3;
+    defaultProgram.layout()->remapPointLightBlock();
+
+    pointMesh->transformation().setTranslation(pointPosition.x, pointPosition.y, pointPosition.z);
+    pointMesh2->transformation().setTranslation(pointPosition2.x, pointPosition2.y, pointPosition2.z);
+    pointMesh3->transformation().setTranslation(pointPosition3.x, pointPosition3.y, pointPosition3.z);
 
     meshA->transformation().rotateDegreesAroundZ(delta * rotSpeed);
     meshB->transformation().rotateDegreesAroundX(delta * rotSpeed);

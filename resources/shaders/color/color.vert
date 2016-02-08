@@ -16,6 +16,8 @@ out VertexOutput
 {
     vec3 position;
     vec3 normal;
+
+
 } vertexOutput;
 
 void main(void)
