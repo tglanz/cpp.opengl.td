@@ -57,6 +57,12 @@ namespace td {
                 printf("xyz:\t%f\t%f\t%f\n", m_normal.x, m_normal.y, m_normal.z);
             }
 
+            Vertex& setNorm(const float& norm)
+            {
+                m_position *= norm / length(m_position);
+                return *this;
+            }
+
             /**
                 position functions
                 all functions are explicitly implemented
@@ -110,6 +116,12 @@ namespace td {
             Vertex & setNormal(const float& x, const float& y, const float& z)
             {
                 m_normal = normalize(glm::vec3(x, y, z));
+                return *this;
+            }
+
+            Vertex & setNormalFromOrigin()
+            {
+                m_normal = normalize(m_position);
                 return *this;
             }
         };

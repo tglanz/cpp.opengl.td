@@ -59,10 +59,23 @@ std::vector<Mesh*> allMeshes;
 Material materialA(defaultProgram.layout());
 Material materialB(defaultProgram.layout());
 
-Geometry *planeGeo, *icosahedronGeo, *temporaryGeo, *cylinderGeo, *boxGeo, *sphereGeo;
-Mesh *meshA, *meshB, *meshC, *meshD, *meshE, *meshF;
+Geometry *icosahedronGeo, *icosahedronFlatGeo;
+Mesh *icosahedronMesh, *icosahedronFlatMesh;
+
+Geometry *boxGeo;
+Mesh *boxMesh;
+
+Geometry *cylinderGeo, *cylinderFlatGeo;
+Mesh *cylinderMesh, *cylinderFlatMesh;
+
+Geometry *discoBallGeo, *sphereGeo;
+Mesh *discoBallMesh, *sphereMesh;
+
+Geometry *pointGeometry;
 Mesh *pointMesh, *pointMesh2, *pointMesh3;
-Mesh *boxMeshA, *boxMeshB, *boxMeshC;
+
+Geometry *planeGeo, *planeFlatGeo;
+Mesh *planeMesh, *planeFlatMesh;
 
 glm::vec4 clearColor(0x00 / 255.0f, 0x90 / 255.0f, 0x00 / 255.0f, 1.0f);
 
@@ -129,7 +142,7 @@ bool init()
     defaultProgram.layout()->pointLightBlock().lights[2].intensities = glm::vec4(0.0, 1.0, 0.0, 0.0);;
     defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights = 3;
 
-    for (int idx = 0; idx < defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights; ++idx)
+    for (unsigned int idx = 0; idx < defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights; ++idx)
     {
         defaultProgram.layout()->pointLightBlock().lights[idx].attenuation.constant = 1;
         defaultProgram.layout()->pointLightBlock().lights[idx].attenuation.linear = 0;
@@ -138,30 +151,60 @@ bool init()
 
     defaultProgram.layout()->remapPointLightBlock();
 
-    planeGeo = geometries::newPlane(20, 20, 2, 2);
+    planeGeo = geometries::newPlane(6, 64, 6, 6);
+    planeMesh = new Mesh(planeGeo, &materialA);
     allGeometries.push_back(planeGeo);
+    allMeshes.push_back(planeMesh);
+    planeMesh->transformation().translate(-3, -4, 0);
 
-    temporaryGeo = geometries::newTemporary(0, 0);
-    allGeometries.push_back(temporaryGeo);
+    planeFlatGeo = geometries::newPlaneFlat(6, 64, 6, 6);
+    planeFlatMesh = new Mesh(planeFlatGeo, &materialA);
+    allGeometries.push_back(planeFlatGeo);
+    allMeshes.push_back(planeFlatMesh);
+    planeFlatMesh->transformation().translate(3, -4, 0);
 
     icosahedronGeo = geometries::newIcosahedron(1);
+    icosahedronMesh = new Mesh(icosahedronGeo, &materialA);
+    icosahedronMesh->transformation().setTranslation(2, 0, 0);
     allGeometries.push_back(icosahedronGeo);
+    allMeshes.push_back(icosahedronMesh);
 
-    cylinderGeo = geometries::newCylinder(1.0f, .5f, 2.0f, 6.0f);
-    allGeometries.push_back(cylinderGeo);
+    icosahedronFlatGeo = geometries::newIcosahedronFlat(1);
+    icosahedronFlatMesh = new Mesh(icosahedronFlatGeo, &materialA);
+    icosahedronFlatMesh->transformation().setTranslation(-2, 0, 0);
+    allGeometries.push_back(icosahedronFlatGeo);
+    allMeshes.push_back(icosahedronFlatMesh);
 
-    boxGeo = geometries::newBox(1.0f, 1.0f, 2.0f);
+    boxGeo = geometries::newBox(1, 1, 1);
+    boxMesh = new Mesh(boxGeo, &materialA);
     allGeometries.push_back(boxGeo);
+    allMeshes.push_back(boxMesh);
 
-    sphereGeo = geometries::newGeodesicSphere(1, 4);
+    cylinderGeo = geometries::newCylinder(.5, 1, 1.5, 8);
+    cylinderMesh = new Mesh(cylinderGeo, &materialA);
+    allGeometries.push_back(cylinderGeo);
+    allMeshes.push_back(cylinderMesh);
+
+    cylinderFlatGeo = geometries::newCylinderFlat(.5, 1, 1.5, 8);
+    cylinderFlatMesh = new Mesh(cylinderFlatGeo, &materialA);
+    allGeometries.push_back(cylinderFlatGeo);
+    allMeshes.push_back(cylinderFlatMesh);
+
+    discoBallGeo = geometries::newGeodesicSphereFlat(1, 1);
+    discoBallMesh = new Mesh(discoBallGeo, &materialA);
+    allGeometries.push_back(discoBallGeo);
+    allMeshes.push_back(discoBallMesh);
+
+    sphereGeo = geometries::newGeodesicSphere(1, 6);
+    sphereMesh = new Mesh(sphereGeo, &materialA);
     allGeometries.push_back(sphereGeo);
-    //sphereGeo->printPositions();
+    allMeshes.push_back(sphereMesh);
 
+    pointGeometry = geometries::newIcosahedron(1);
+    allGeometries.push_back(pointGeometry);
 
-    for (unsigned int idx = 0; idx < allGeometries.size(); ++idx)
-    {
-        setupNewGeometry(allGeometries[idx]);
-    }
+    for (Geometry* geo : allGeometries)
+        setupNewGeometry(geo);
 
     materialA.specularShininess() = 300.0f;
     materialA.specularColor() = glm::vec3(.7f, .7f, .7f);
@@ -169,57 +212,17 @@ bool init()
 
     materialB.diffuseColor() = glm::vec3(0, 0, 0);
 
-    boxMeshA = new Mesh(boxGeo, &materialA);
-    boxMeshA->transformation().translate(-2, .5, 0);
-    allMeshes.push_back(boxMeshA);
-
-    boxMeshB = new Mesh(boxGeo, &materialA);
-    boxMeshB->transformation().translate(0, .5, 0);
-    allMeshes.push_back(boxMeshB);
-
-    boxMeshC = new Mesh(boxGeo, &materialA);
-    boxMeshC->transformation().translate(2, .5, 0);
-    allMeshes.push_back(boxMeshC);
-
-    meshA = new Mesh(sphereGeo, &materialA);
-    meshA->transformation().translate(2, 3, 0);
-    allMeshes.push_back(meshA);
-
-    meshB = new Mesh(sphereGeo, &materialA);
-    meshB->transformation().translate(0.0f, 3, 0);
-    allMeshes.push_back(meshB);
-
-    meshC = new Mesh(sphereGeo, &materialA);
-    meshC->transformation().translate(-2.0f, 3, 0);
-    allMeshes.push_back(meshC);
-
-    meshD = new Mesh(cylinderGeo, &materialA);
-    meshD->transformation().translate(3.0, -2.0, 0.0);
-    allMeshes.push_back(meshD);
-
-    meshE = new Mesh(cylinderGeo, &materialA);
-    meshE->transformation().translate(0.0, -2.0, 0.0);
-    allMeshes.push_back(meshE);
-
-    meshF = new Mesh(cylinderGeo, &materialA);
-    meshF->transformation().translate(-3.0, -2.0, 0.0);
-    allMeshes.push_back(meshF);
-
-    pointMesh = new Mesh(icosahedronGeo, &materialB);
-    pointMesh->transformation().scale(.2);
+    pointMesh = new Mesh(pointGeometry, &materialB);
+    pointMesh->transformation().scale(.1);
     allMeshes.push_back(pointMesh);
 
-    pointMesh2 = new Mesh(icosahedronGeo, &materialB);
-    pointMesh2->transformation().scale(.2);
+    pointMesh2 = new Mesh(pointGeometry, &materialB);
+    pointMesh2->transformation().scale(.1);
     allMeshes.push_back(pointMesh2);
 
-    pointMesh3 = new Mesh(icosahedronGeo, &materialB);
-    pointMesh3->transformation().scale(.2);
+    pointMesh3 = new Mesh(pointGeometry, &materialB);
+    pointMesh3->transformation().scale(.1);
     allMeshes.push_back(pointMesh3);
-
-    meshA->transformation().rotateDegreesAroundZ(45);
-    meshB->transformation().rotateDegreesAroundX(45);
-    meshC->transformation().rotateDegreesAroundY(45);
 
     return true;
 }
@@ -248,37 +251,42 @@ void update()
     static float lastTime = glfwGetTime();
     float now = glfwGetTime();
     float delta = now - lastTime;
+    const float speed = 2.0f;
 
-    static float rotSpeed = 100;
-    static float lightPosSpeed = 1;
-    static float lightPosRadius = 5;
+    float toRotate = delta * speed;
 
-    glm::vec4 pointPosition = glm::vec4(cos(now * lightPosSpeed) * lightPosRadius, 0, sin(now * lightPosSpeed) * lightPosRadius, 0);
-    glm::vec4 pointPosition2 = glm::vec4(cos( - now * 2 * lightPosSpeed) * lightPosRadius, 0, sin( - now * 2 * lightPosSpeed) * lightPosRadius, 0);
-    glm::vec4 pointPosition3 = glm::vec4(0, cos( - now * lightPosSpeed) * lightPosRadius, sin( - now * lightPosSpeed) * lightPosRadius, 0);
+    glm::vec4 pointPosition = glm::vec4(-5.0f, 0.0f, 5.0f, 1.0f);
+    glm::vec4 pointPosition2 = glm::vec4(0.0f, 0.0f, 5.0f, 1.0f);
+    glm::vec4 pointPosition3 = glm::vec4(5.0f, 0.0f, 5.0f, 1.0f);
 
     defaultProgram.layout()->pointLightBlock().sequentialNumberOfLights = 3;
 
     defaultProgram.layout()->pointLightBlock().lights[0].position = pointPosition;
-    defaultProgram.layout()->pointLightBlock().lights[1].position = pointPosition2;
-    defaultProgram.layout()->pointLightBlock().lights[2].position = pointPosition3;
-    defaultProgram.layout()->remapPointLightBlock();
-
     pointMesh->transformation().setTranslation(pointPosition.x, pointPosition.y, pointPosition.z);
+
+    defaultProgram.layout()->pointLightBlock().lights[1].position = pointPosition2;
     pointMesh2->transformation().setTranslation(pointPosition2.x, pointPosition2.y, pointPosition2.z);
+
+    defaultProgram.layout()->pointLightBlock().lights[2].position = pointPosition3;
     pointMesh3->transformation().setTranslation(pointPosition3.x, pointPosition3.y, pointPosition3.z);
 
-    meshA->transformation().rotateDegreesAroundZ(delta * rotSpeed);
-    meshB->transformation().rotateDegreesAroundX(delta * rotSpeed);
-    meshC->transformation().rotateDegreesAroundY(delta * rotSpeed);
+    defaultProgram.layout()->remapPointLightBlock();
 
-    meshD->transformation().rotateDegreesAroundZ(delta * rotSpeed);
-    meshE->transformation().rotateDegreesAroundX(delta * rotSpeed);
-    meshF->transformation().rotateDegreesAroundY(delta * rotSpeed);
+    icosahedronFlatMesh->transformation().rotateRadiansAroundY(toRotate);
+    icosahedronMesh->transformation().rotateRadiansAroundY(toRotate);
 
-    boxMeshA->transformation().rotateDegreesAroundZ(delta * rotSpeed);
-    boxMeshB->transformation().rotateDegreesAroundX(delta * rotSpeed);
-    boxMeshC->transformation().rotateDegreesAroundY(delta * rotSpeed);
+    boxMesh->transformation().setTranslation(0, 0, -2.5f);
+    boxMesh->transformation().rotateRadiansAroundY(toRotate);
+
+    cylinderMesh->transformation().setTranslation(2, 2, 0);
+    cylinderMesh->transformation().rotateRadiansAroundY(toRotate);
+    cylinderFlatMesh->transformation().setTranslation(-2, 2, 0);
+    cylinderFlatMesh->transformation().rotateRadiansAroundY(toRotate);
+
+    discoBallMesh->transformation().setTranslation(-2, -2, 0);
+    discoBallMesh->transformation().rotateRadiansAroundY(toRotate);
+    sphereMesh->transformation().setTranslation(2, -2, 0);
+    sphereMesh->transformation().rotateRadiansAroundY(toRotate);
 
     camera.timeFactor() = delta;
     camera.update();
